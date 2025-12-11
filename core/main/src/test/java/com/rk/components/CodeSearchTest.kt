@@ -312,19 +312,26 @@ class CodeSearchTest {
                 continue
             }
             
-            if (content == null) continue
-            
             // Search in file content
             val lines = content.lines()
             lines.forEachIndexed { lineIndex, line ->
-                if (line.lowercase().contains(query.lowercase())) {
-                    val column = line.lowercase().indexOf(query.lowercase())
+                // Find all occurrences of query in the line
+                var searchIndex = 0
+                val lowercaseLine = line.lowercase()
+                val lowercaseQuery = query.lowercase()
+                
+                while (searchIndex <= line.length) {
+                    val foundIndex = lowercaseLine.indexOf(lowercaseQuery, searchIndex)
+                    if (foundIndex == -1) break
+                    
                     val match = CodeMatch(
                         line = lineIndex + 1,  // 1-indexed
-                        column = column + 1,   // 1-indexed
+                        column = foundIndex + 1,   // 1-indexed
                         snippet = line.trim()
                     )
                     results.getOrPut(file) { mutableListOf() }.add(match)
+                    
+                    searchIndex = foundIndex + lowercaseQuery.length
                 }
             }
         }
