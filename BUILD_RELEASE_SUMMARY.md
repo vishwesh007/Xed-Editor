@@ -91,9 +91,30 @@ The repository already has a working CI/CD pipeline configured in `.github/workf
 ## Recommendations
 
 ### Immediate Action (For User)
-1. **Merge this PR to main branch**
-2. **Wait for GitHub Actions to complete** (~10-15 minutes)
-3. **Download APK from artifacts** or Telegram
+
+**Before Merging**: Fix AGP version
+```bash
+# Edit gradle/libs.versions.toml
+# Change: agp = "8.13.1"
+# To: agp = "8.5.0" (or another valid version)
+```
+
+**Then Merge via GitHub UI**:
+1. Go to Pull Request page on GitHub
+2. Click "Merge pull request" button
+3. Confirm merge to main branch
+
+**Or via Git Commands**:
+```bash
+git checkout main
+git merge copilot/implement-folder-file-search
+git push origin main
+```
+
+**After Merge**:
+1. **Wait for GitHub Actions to complete** (~10-15 minutes)
+2. **Download APK from artifacts** or Telegram
+   - GitHub → Actions tab → Latest workflow run → Artifacts section
 
 ### For Future Builds
 - Use GitHub Actions for all release builds

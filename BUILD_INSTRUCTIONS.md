@@ -50,9 +50,10 @@ ls app/build/outputs/apk/
 
 ## Note on AGP Version
 
-The AGP version `8.13.1` in `gradle/libs.versions.toml` appears to be a placeholder or typo. The GitHub Actions CI successfully builds with this configuration, suggesting:
-- The CI environment has a different resolution mechanism
-- Or the version is automatically corrected during build
-- Or there's a custom repository configured in the CI environment
+The AGP version `8.13.1` in `gradle/libs.versions.toml` does not exist in Maven repositories. This will cause build failures in any environment (including CI) unless:
+1. The version is corrected to a valid version (e.g., 8.3.0, 8.5.0)
+2. Or CI has a fallback/override mechanism we're not aware of
 
-The search features implementation is complete and ready for building once network restrictions are resolved or CI is used.
+**Recommendation**: Update `agp = "8.13.1"` to a valid version like `agp = "8.5.0"` in `gradle/libs.versions.toml` before merging to ensure CI builds succeed.
+
+The search features implementation is complete and ready for building once the AGP version is corrected.
