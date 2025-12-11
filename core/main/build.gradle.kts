@@ -58,7 +58,7 @@ android {
         compose = true
     }
 
-    composeOptions { kotlinCompilerExtensionVersion = "2.2.20" }
+    composeOptions { kotlinCompilerExtensionVersion = "1.5.15" }
 }
 
 val runPrecompileScript by
