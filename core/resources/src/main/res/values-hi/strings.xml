@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">Xed-Editor</string>
+    <string name="app_name" translatable="false">APKEditor</string>
     <string name="open_drawer">ड्रॉअर खोलें</string>
     <string name="close_drawer">ड्रॉअर बंद करें</string>
     <string name="not_implemented">यह सुविधा उपलब्ध नहीं</string>
