@@ -47,9 +47,10 @@ object ProjectReplaceManager {
 
             for (file in files) {
                 val before = runCatching { file.readText(charset) }.getOrNull() ?: continue
-                if (!before.contains(query)) continue
+                val regex = Regex.escape(query).toRegex(RegexOption.IGNORE_CASE)
+                if (!before.contains(regex)) continue
 
-                val after = before.replace(query, replacement)
+                val after = before.replace(regex, replacement)
                 if (after == before) continue
 
                 val wrote = runCatching {
