@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.rk.application"
+    namespace = "com.rk.apkeditor"
     compileSdk = 36
 
     dependenciesInfo {
@@ -21,14 +21,20 @@ android {
         create("release") {
             val isGITHUB_ACTION = System.getenv("GITHUB_ACTIONS") == "true"
 
-            val propertiesFilePath =
+            val propertiesFile =
                 if (isGITHUB_ACTION) {
-                    "/tmp/signing.properties"
+                    File("/tmp/signing.properties")
                 } else {
-                    "/home/rohit/Android/xed-signing/signing.properties"
+                    val envPath = System.getenv("XED_SIGNING_PROPERTIES")?.takeIf { it.isNotBlank() }
+                    val candidates =
+                        listOfNotNull(
+                            envPath?.let { File(it) },
+                            rootProject.file("signing.properties"),
+                            rootProject.file("xed-signing/signing.properties"),
+                            File("/home/rohit/Android/xed-signing/signing.properties"),
+                        )
+                    candidates.firstOrNull { it.exists() } ?: candidates.last()
                 }
-
-            val propertiesFile = File(propertiesFilePath)
             if (propertiesFile.exists()) {
                 val properties = Properties()
                 properties.load(propertiesFile.inputStream())
@@ -43,7 +49,7 @@ android {
 
                 storePassword = properties["storePassword"] as String?
             } else {
-                println("Signing properties file not found at $propertiesFilePath")
+                println("Signing properties file not found at ${propertiesFile.absolutePath}")
             }
         }
         getByName("debug") {
@@ -61,13 +67,14 @@ android {
 
             isCrunchPngs = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName("release")
+            val releaseSigning = signingConfigs.getByName("release")
+            signingConfig = if (releaseSigning.storeFile != null) releaseSigning else signingConfigs.getByName("debug")
         }
 
         debug {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-DEBUG"
-            resValue("string", "app_name", "Xed-Debug")
+            resValue("string", "app_name", "APKEditor-Debug")
         }
 
         create("benchmark") {
@@ -79,7 +86,7 @@ android {
 
     // Values in this will be overridden by the flavours
     defaultConfig {
-        applicationId = "com.rk.xededitor"
+        applicationId = "com.rk.apkeditor"
         minSdk = 26
 
         //noinspection ExpiredTargetSdkVersion
