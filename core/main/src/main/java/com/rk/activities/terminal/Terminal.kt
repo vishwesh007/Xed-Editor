@@ -100,21 +100,21 @@ class Terminal : AppCompatActivity() {
 
         lifecycleScope.launch(Dispatchers.Main) {
             val client = TerminalBackEnd(terminalView, this@Terminal)
-            
+
             // Check if there's a pending command from launchInternalTerminal
             val command = com.rk.exec.pendingCommand
             if (command != null) {
                 val sessionId = command.id
-                
+
                 // Terminate previous session if requested
                 if (command.terminatePreviousSession && binder.getSession(sessionId) != null) {
                     binder.terminateSession(sessionId)
                 }
-                
+
                 // Get existing session or create new one
-                val session = binder.getSession(sessionId)
-                    ?: binder.createSession(sessionId, client, this@Terminal).session
-                
+                val session =
+                    binder.getSession(sessionId) ?: binder.createSession(sessionId, client, this@Terminal).session
+
                 session.updateTerminalSessionClient(client)
                 binder.getService().currentSession.value = sessionId
                 this@Terminal.changeSession(sessionId)

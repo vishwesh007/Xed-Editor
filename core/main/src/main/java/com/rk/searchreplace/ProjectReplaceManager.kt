@@ -3,9 +3,9 @@ package com.rk.searchreplace
 import androidx.compose.runtime.mutableStateOf
 import com.rk.file.FileObject
 import com.rk.utils.toast
+import java.nio.charset.Charset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.nio.charset.Charset
 
 object ProjectReplaceManager {
     private val undoStack = ArrayDeque<ReplaceOperation>()
@@ -20,50 +20,39 @@ object ProjectReplaceManager {
         canRedo.value = redoStack.isNotEmpty()
     }
 
-    data class FileChange(
-        val file: FileObject,
-        val before: String,
-        val after: String,
-    )
+    data class FileChange(val file: FileObject, val before: String, val after: String)
 
-    data class ReplaceOperation(
-        val query: String,
-        val replacement: String,
-        val changes: List<FileChange>,
-    )
+    data class ReplaceOperation(val query: String, val replacement: String, val changes: List<FileChange>)
 
-    /**
-     * Search options for controlling how matching is performed
-     */
+    /** Search options for controlling how matching is performed */
     data class SearchOptions(
         val caseSensitive: Boolean = false,
         val wholeWord: Boolean = false,
         val useRegex: Boolean = false,
     )
 
-    /**
-     * Build a Regex pattern based on the search options
-     */
+    /** Build a Regex pattern based on the search options */
     fun buildSearchRegex(query: String, options: SearchOptions): Regex {
-        val pattern = if (options.useRegex) {
-            if (options.wholeWord) "\\b$query\\b" else query
-        } else {
-            val escaped = Regex.escape(query)
-            if (options.wholeWord) "\\b$escaped\\b" else escaped
-        }
-        
-        val regexOptions = if (options.caseSensitive) {
-            emptySet()
-        } else {
-            setOf(RegexOption.IGNORE_CASE)
-        }
-        
+        val pattern =
+            if (options.useRegex) {
+                if (options.wholeWord) "\\b$query\\b" else query
+            } else {
+                val escaped = Regex.escape(query)
+                if (options.wholeWord) "\\b$escaped\\b" else escaped
+            }
+
+        val regexOptions =
+            if (options.caseSensitive) {
+                emptySet()
+            } else {
+                setOf(RegexOption.IGNORE_CASE)
+            }
+
         return pattern.toRegex(regexOptions)
     }
 
     /**
-     * Escape replacement string for non-regex mode.
-     * In regex mode, allows backreferences ($1, $2) and escape sequences.
+     * Escape replacement string for non-regex mode. In regex mode, allows backreferences ($1, $2) and escape sequences.
      * In non-regex mode, treats $ and \ as literal characters.
      */
     fun escapeReplacement(replacement: String, useRegex: Boolean): String {
@@ -85,13 +74,15 @@ object ProjectReplaceManager {
         withContext(Dispatchers.IO) {
             if (query.isBlank()) return@withContext null
 
-            val regex = runCatching { buildSearchRegex(query, options) }.getOrElse {
-                toast("Invalid regex pattern")
-                return@withContext null
-            }
-            
+            val regex =
+                runCatching { buildSearchRegex(query, options) }
+                    .getOrElse {
+                        toast("Invalid regex pattern")
+                        return@withContext null
+                    }
+
             val escapedReplacement = escapeReplacement(replacement, options.useRegex)
-            
+
             val files = collectTextFiles(projectRoot, maxFileBytes)
             val changes = ArrayList<FileChange>()
 
@@ -102,10 +93,12 @@ object ProjectReplaceManager {
                 val after = before.replace(regex, escapedReplacement)
                 if (after == before) continue
 
-                val wrote = runCatching {
-                    file.writeText(after, charset)
-                    true
-                }.getOrDefault(false)
+                val wrote =
+                    runCatching {
+                            file.writeText(after, charset)
+                            true
+                        }
+                        .getOrDefault(false)
                 if (!wrote) continue
 
                 changes.add(FileChange(file = file, before = before, after = after))
@@ -134,10 +127,12 @@ object ProjectReplaceManager {
 
             var failures = 0
             for (change in op.changes) {
-                val ok = runCatching {
-                    change.file.writeText(change.before)
-                    true
-                }.getOrDefault(false)
+                val ok =
+                    runCatching {
+                            change.file.writeText(change.before)
+                            true
+                        }
+                        .getOrDefault(false)
                 if (!ok) failures++
             }
 
@@ -161,10 +156,12 @@ object ProjectReplaceManager {
 
             var failures = 0
             for (change in op.changes) {
-                val ok = runCatching {
-                    change.file.writeText(change.after)
-                    true
-                }.getOrDefault(false)
+                val ok =
+                    runCatching {
+                            change.file.writeText(change.after)
+                            true
+                        }
+                        .getOrDefault(false)
                 if (!ok) failures++
             }
 
@@ -209,18 +206,19 @@ object ProjectReplaceManager {
         if (len <= 0L || len > maxFileBytes) return
 
         // Quick binary sniff: skip files containing NUL bytes
-        val isBinary = runCatching {
-                node.getInputStream().use { input ->
-                    val buf = ByteArray(4096)
-                    val read = input.read(buf)
-                    if (read <= 0) return@use false
-                    for (i in 0 until read) {
-                        if (buf[i].toInt() == 0) return@use true
+        val isBinary =
+            runCatching {
+                    node.getInputStream().use { input ->
+                        val buf = ByteArray(4096)
+                        val read = input.read(buf)
+                        if (read <= 0) return@use false
+                        for (i in 0 until read) {
+                            if (buf[i].toInt() == 0) return@use true
+                        }
+                        false
                     }
-                    false
                 }
-            }
-            .getOrDefault(true)
+                .getOrDefault(true)
 
         if (isBinary) return
 

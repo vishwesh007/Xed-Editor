@@ -113,9 +113,7 @@ private suspend fun searchInProject(
     if (!context.isActive) return
 
     // Build regex from options
-    val searchRegex = runCatching { 
-        ProjectReplaceManager.buildSearchRegex(query, options) 
-    }.getOrNull() ?: return
+    val searchRegex = runCatching { ProjectReplaceManager.buildSearchRegex(query, options) }.getOrNull() ?: return
 
     for (file in childFiles) {
         if (!context.isActive) return
@@ -151,15 +149,17 @@ private suspend fun searchInProject(
                 val matchLength = matchResult.value.length
                 val fileExt = file.getName().substringAfterLast(".")
 
-                val snippet = runCatching {
-                    generateSnippet(
-                        context = MainActivity.instance!!,
-                        targetLine = line,
-                        fileExt = fileExt,
-                        start = charIndex,
-                        end = charIndex + matchLength,
-                    )
-                }.getOrNull()
+                val snippet =
+                    runCatching {
+                            generateSnippet(
+                                context = MainActivity.instance!!,
+                                targetLine = line,
+                                fileExt = fileExt,
+                                start = charIndex,
+                                end = charIndex + matchLength,
+                            )
+                        }
+                        .getOrNull()
 
                 fileMatches.add(
                     SearchMatch(
@@ -180,11 +180,7 @@ private suspend fun searchInProject(
 }
 
 @Composable
-fun ProjectSearchReplaceDialog(
-    viewModel: MainViewModel,
-    projectFile: FileObject,
-    onFinish: () -> Unit,
-) {
+fun ProjectSearchReplaceDialog(viewModel: MainViewModel, projectFile: FileObject, onFinish: () -> Unit) {
     var searchQuery by remember { mutableStateOf("") }
     var replaceQuery by remember { mutableStateOf("") }
     var showReplace by remember { mutableStateOf(true) }
@@ -236,10 +232,12 @@ fun ProjectSearchReplaceDialog(
                         Icon(
                             painter = painterResource(drawables.find_replace),
                             contentDescription = "Toggle Replace",
-                            tint = if (showReplace) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            tint =
+                                if (showReplace) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                         )
                     }
-                }
+                },
             )
 
             // Search options row
@@ -252,44 +250,49 @@ fun ProjectSearchReplaceDialog(
                     onClick = { caseSensitive = !caseSensitive },
                     modifier = Modifier.height(32.dp),
                     contentPadding = ButtonDefaults.ContentPadding,
-                    colors = if (caseSensitive) ButtonDefaults.outlinedButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    ) else ButtonDefaults.outlinedButtonColors()
+                    colors =
+                        if (caseSensitive)
+                            ButtonDefaults.outlinedButtonColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                            )
+                        else ButtonDefaults.outlinedButtonColors(),
                 ) {
                     Text("Aa", fontSize = 12.sp)
                 }
-                
+
                 // Whole Word toggle
                 OutlinedButton(
                     onClick = { wholeWord = !wholeWord },
                     modifier = Modifier.height(32.dp),
                     contentPadding = ButtonDefaults.ContentPadding,
-                    colors = if (wholeWord) ButtonDefaults.outlinedButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    ) else ButtonDefaults.outlinedButtonColors()
+                    colors =
+                        if (wholeWord)
+                            ButtonDefaults.outlinedButtonColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                            )
+                        else ButtonDefaults.outlinedButtonColors(),
                 ) {
                     Text("[W]", fontSize = 12.sp)
                 }
-                
+
                 // Regex toggle
                 OutlinedButton(
                     onClick = { useRegex = !useRegex },
                     modifier = Modifier.height(32.dp),
                     contentPadding = ButtonDefaults.ContentPadding,
-                    colors = if (useRegex) ButtonDefaults.outlinedButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    ) else ButtonDefaults.outlinedButtonColors()
+                    colors =
+                        if (useRegex)
+                            ButtonDefaults.outlinedButtonColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                            )
+                        else ButtonDefaults.outlinedButtonColors(),
                 ) {
                     Text(".*", fontSize = 12.sp)
                 }
             }
 
             // Replace input (collapsible)
-            AnimatedVisibility(
-                visible = showReplace,
-                enter = expandVertically(),
-                exit = shrinkVertically()
-            ) {
+            AnimatedVisibility(visible = showReplace, enter = expandVertically(), exit = shrinkVertically()) {
                 OutlinedTextField(
                     value = replaceQuery,
                     onValueChange = { replaceQuery = it },
@@ -314,11 +317,12 @@ fun ProjectSearchReplaceDialog(
                         CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
                     }
                     Text(
-                        text = when {
-                            searchQuery.isEmpty() -> stringResource(strings.empty_code_results)
-                            totalMatches > 0 -> "$totalMatches matches in $totalFiles files"
-                            else -> stringResource(strings.no_results)
-                        },
+                        text =
+                            when {
+                                searchQuery.isEmpty() -> stringResource(strings.empty_code_results)
+                                totalMatches > 0 -> "$totalMatches matches in $totalFiles files"
+                                else -> stringResource(strings.no_results)
+                            },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     )
@@ -361,10 +365,7 @@ fun ProjectSearchReplaceDialog(
             LaunchedEffect(Unit) { focusRequester.requestFocus() }
 
             // File list with matches
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.weight(1f, fill = false)
-            ) {
+            LazyColumn(state = listState, modifier = Modifier.weight(1f, fill = false)) {
                 searchResults.forEach { (fileObject, matches) ->
                     val isHidden = fileObject.getName().startsWith(".") || fileObject.getAbsolutePath().contains("/.")
                     val isExpanded = fileObject in expandedFiles
@@ -373,20 +374,23 @@ fun ProjectSearchReplaceDialog(
                     item(key = "header_${fileObject.getAbsolutePath()}") {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    if (isExpanded) expandedFiles.remove(fileObject)
-                                    else expandedFiles.add(fileObject)
-                                }
-                                .addIf(isHidden) { Modifier.alpha(0.5f) }
-                                .padding(vertical = 8.dp),
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .clickable {
+                                        if (isExpanded) expandedFiles.remove(fileObject)
+                                        else expandedFiles.add(fileObject)
+                                    }
+                                    .addIf(isHidden) { Modifier.alpha(0.5f) }
+                                    .padding(vertical = 8.dp),
                         ) {
                             Icon(
-                                painter = painterResource(if (isExpanded) drawables.arrow_upward else drawables.arrow_downward),
+                                painter =
+                                    painterResource(
+                                        if (isExpanded) drawables.arrow_upward else drawables.arrow_downward
+                                    ),
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp),
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             )
 
                             Spacer(modifier = Modifier.width(4.dp))
@@ -414,24 +418,26 @@ fun ProjectSearchReplaceDialog(
                             if (showReplace) {
                                 OutlinedButton(
                                     onClick = {
-                                        val options = ProjectReplaceManager.SearchOptions(caseSensitive, wholeWord, useRegex)
+                                        val options =
+                                            ProjectReplaceManager.SearchOptions(caseSensitive, wholeWord, useRegex)
                                         scope.launch(Dispatchers.IO) {
                                             val content = fileObject.readText() ?: return@launch
-                                            val regex = runCatching { 
-                                                ProjectReplaceManager.buildSearchRegex(searchQuery, options) 
-                                            }.getOrElse { 
-                                                toast("Invalid regex pattern")
-                                                return@launch 
-                                            }
-                                            val escapedReplace = ProjectReplaceManager.escapeReplacement(replaceQuery, options.useRegex)
+                                            val regex =
+                                                runCatching {
+                                                        ProjectReplaceManager.buildSearchRegex(searchQuery, options)
+                                                    }
+                                                    .getOrElse {
+                                                        toast("Invalid regex pattern")
+                                                        return@launch
+                                                    }
+                                            val escapedReplace =
+                                                ProjectReplaceManager.escapeReplacement(replaceQuery, options.useRegex)
                                             val newContent = content.replace(regex, escapedReplace)
                                             if (newContent != content) {
                                                 fileObject.writeText(newContent)
                                                 toast("Replaced in ${fileObject.getName()}")
                                                 // Update search results
-                                                withContext(Dispatchers.Main) {
-                                                    searchResults.remove(fileObject)
-                                                }
+                                                withContext(Dispatchers.Main) { searchResults.remove(fileObject) }
                                             }
                                         }
                                     },
@@ -448,21 +454,23 @@ fun ProjectSearchReplaceDialog(
                     if (isExpanded) {
                         items(
                             items = matches,
-                            key = { match -> "${fileObject.getAbsolutePath()}_${match.lineNumber}_${match.columnStart}" }
+                            key = { match ->
+                                "${fileObject.getAbsolutePath()}_${match.lineNumber}_${match.columnStart}"
+                            },
                         ) { match ->
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        // Navigate to file and line
-                                        DefaultScope.launch {
-                                            viewModel.newTab(fileObject, checkDuplicate = true, switchToTab = true)
-                                            // TODO: Navigate to specific line after tab opens
+                                modifier =
+                                    Modifier.fillMaxWidth()
+                                        .clickable {
+                                            // Navigate to file and line
+                                            DefaultScope.launch {
+                                                viewModel.newTab(fileObject, checkDuplicate = true, switchToTab = true)
+                                                // TODO: Navigate to specific line after tab opens
+                                            }
+                                            onFinish()
                                         }
-                                        onFinish()
-                                    }
-                                    .padding(start = 32.dp, top = 4.dp, bottom = 4.dp, end = 8.dp)
-                                    .addIf(isHidden) { Modifier.alpha(0.5f) },
+                                        .padding(start = 32.dp, top = 4.dp, bottom = 4.dp, end = 8.dp)
+                                        .addIf(isHidden) { Modifier.alpha(0.5f) },
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(
@@ -499,13 +507,8 @@ fun ProjectSearchReplaceDialog(
             }
 
             // Bottom actions
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                horizontalArrangement = Arrangement.End,
-            ) {
-                TextButton(onClick = onFinish) {
-                    Text("Close")
-                }
+            Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = onFinish) { Text("Close") }
             }
         }
     }
