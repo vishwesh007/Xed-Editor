@@ -69,12 +69,11 @@ jobs:
         run: rm /tmp/xed.keystore /tmp/signing.properties
 
       - name: Send APK to Telegram
-        if: ${{ success() && github.event.head_commit.message != '' }}
+        if: ${{ success() }}
         run: |
-          CAPTION=$(jq -R . <<< "${{ github.event.head_commit.message }}")
+          CAPTION="${{ github.event.head_commit.message || 'Manual build triggered' }}"
           curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendDocument" \
-          -F chat_id="-1002408175863" \
-          -F message_thread_id="582" \
+          -F chat_id="590244502" \
           -F caption="$CAPTION" \
           -F document=@"app/xed-editor-${{ env.COMMIT_HASH }}.apk"
 
