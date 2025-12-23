@@ -12,9 +12,7 @@ pluginManagement {
 
         maven("https://repo.eclipse.org/content/groups/releases/")
     }
-    plugins {
-        kotlin("jvm") version "2.2.20"
-    }
+    plugins { kotlin("jvm") version "1.9.24" }
 }
 plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
